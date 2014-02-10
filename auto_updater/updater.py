@@ -57,7 +57,10 @@ class DatabaseObject(object):
         self.db.commit()
 
     def delete_path(self, path):
-        pass
+        a_path = os.path.basename(path)
+        statement = 'DELETE FROM Songs where path = ?'
+        self._execute(statement, [a_path])
+        self.db.commit()
 
 
 class ParserUpdater(object):
@@ -69,7 +72,7 @@ class ParserUpdater(object):
         self.db.connect()
 
     def update(self, task):
-        if task['type'] == 'IN_CREATE':
+        if task['type'] == 'IN_CLOSE_WRITE':
             self.add_song(task['value'])
         elif task['type'] == 'IN_DELETE':
             self.rm_song(task['value'])
@@ -79,7 +82,8 @@ class ParserUpdater(object):
             info = kaa.metadata.parse(song_file)
         except kaa.metadata.core.ParseError as e:
             return
-        self.db.insert(info, song_file)
+        if info:
+            self.db.insert(info, song_file)
 
     def rm_song(self, song_file):
         self.db.delete_path(song_file)
