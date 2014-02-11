@@ -1,3 +1,5 @@
+#! /home/pi/.virtualenvs/fsObs/bin/python
+
 import pyinotify
 import listener
 import updater
