@@ -32,24 +32,26 @@ class DatabaseObject(object):
         return result
 
     def insert(self, metadata, path):
+        statement = 'INSERT INTO artists (name) VALUES (?)'
+        try:
+            self._execute(statement, [metadata.get('artist', default='unknown')])
+            self.db.commit()
+        except sqlite3.IntegrityError as e:
+            print e
+            pass
         statement = 'SELECT id FROM artists WHERE name=?'
         artist_id = self._execute(statement, [metadata.get('artist', default='unknown')])
-        if not artist_id:
-            statement = 'INSERT INTO artists (name) VALUES (?)'
-            self._execute(statement, [metadata.get('artist', default='unknown')])
-            artist_id = self.cursor.lastrowid
+        artist_id = artist_id[0][0]
+        statement = 'INSERT INTO albums (album, artist_id) VALUES (?, ?)'
+        try:
+            self._execute(statement, [metadata.get('album', default='unknown'), artist_id])
             self.db.commit()
-        else:
-            artist_id = artist_id[0][0]
+        except sqlite3.IntegrityError as e:
+            print e
+            pass
         statement = 'SELECT id FROM albums WHERE album=?'
         album_id = self._execute(statement, [metadata.get('album', default='unknown')])
-        if album_id:
-            album_id = album_id[0][0]
-        else:
-            statement = 'INSERT INTO albums (album, artist_id) VALUES (?, ?)'
-            self._execute(statement, [metadata.get('album', default='unknown'), artist_id])
-            album_id = self.cursor.lastrowid
-            self.db.commit()
+        album_id = album_id[0][0]
         a_path = os.path.basename(path)
         print a_path
         statement = 'INSERT INTO Songs (song, album_id, path, Album, Artist) VALUES (?, ?, ?, ?, ?)'
